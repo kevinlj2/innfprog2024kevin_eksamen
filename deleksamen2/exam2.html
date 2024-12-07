@@ -6,7 +6,8 @@
     <title>Eksamen, oppgave 2</title>
     <link href="exam2.css" rel="stylesheet" media="all">
 </head>
-<body class="lato-regular">
+<body class="lato-regular" onload="startTime()">
+    <!--Lagt inn onload="startTime()" slik at når siden lastes inn begynner klokken-->
     <main>
         <section id="contacts">
             <h2>Kontakter</h2>
@@ -32,7 +33,7 @@
         </section>
         <section id="todoform">
             <h2>Ny oppgave</h2>
-            <p><label for="task">Oppgavetekst:</label><br /><input type="text" id="task" /><button id="savetask">Lagre</button></p>
+            <p><label for="task">Oppgavetekst:</label><br /><input type="text" id="task" /><button id="savetask" onclick="saveTask()">Lagre</button></p>
         </section>
         <section id="todos">
             <h2>Oppgaver</h2>
@@ -61,15 +62,21 @@
             {lastname: "Jansson", firstname: "Sigried", office: "B1", mail: "s.jansson@company.com"}
         ]
 
-        let contactlist = ""
+        // For å sortere navnene alfabetisk har jeg lagt inn i sort parameterne at a kommer før b, så sammenligner jeg 
+        // objektene i arrayen med hverandre slik at a blir først.
+        // Kilde: https://dev.to/fpaghar/donesort-an-array-of-objects-ways-in-javascript-48hl
+        contacts.sort((a, b) => a.lastname.localeCompare(b.lastname));
 
+        let contactlist = ""
+        // For å gjøre mailene til klikkbare til mailto har jeg lagt inn 
+        // <a href="mailto:${contact.mail}">${contact.mail}</a> 
+        // Slik at man kan trykke på mailen man skal maile
         contacts.map((contact, index) => {
             contactlist += `<article>
                 <p><strong>${contact.lastname}, ${contact.firstname}</strong><br />
-                    Kontor: ${contact.office} | E-post: ${contact.mail}</p>
+                    Kontor: ${contact.office} | E-post: <a href="mailto:${contact.mail}">${contact.mail}</a></p>
             </article>`
         })
-
         document.getElementById("contactlist").innerHTML = contactlist
         
         //BOOKS
@@ -81,11 +88,32 @@
             {text: "Kontorrekvisita", date: "10.11.24", amount: -644},
             {text: "Nettbutikksalg, uke 45", date: "13.11.24", amount: 2988}
         ]
+        
+        // Bruker .map for å kunne lage flere linjer fra samme array 
+        let bookline = ""
+        books.map((book, index) => {
+            bookline += 
+            `<div class="bookline">
+                <span class="booktext">${book.text}</span>
+                <span class="bookdate">${book.date}</span>
+                <span class="bookamount">${book.amount} kr</span>
+            </div>`})
+        document.getElementById("booklines").innerHTML = bookline
 
         let equity = 23782; //Penger på konto ved inngangen til november
         document.getElementById("incomingequity").innerHTML = equity
-        let balance = 0;    //Startbalanse for utregning av utgifter og inntekter i november
 
+        let balance = 0;    //Startbalanse for utregning av utgifter og inntekter i november
+            // Lager .map for å indexere de forskjellige indexene og bruker += for å legge alle pengene sammen.
+            books.map((book, index) => {
+                balance += book.amount
+            })
+            // Bruker document.getElementById("balance").innerHTML for å få resultatet inn i HTML
+           document.getElementById("balance").innerHTML = balance
+
+           // Lager en variabel som legger sammen egenkapitalet og overskudded fra denne måneden
+           let monthlyEquity = equity + balance
+           document.getElementById("equity").innerHTML = monthlyEquity
 
         //TODOS
         const todos = [
@@ -95,9 +123,70 @@
             {text: "Lag funksjonalitet for å sette en eksisterende oppgave til utført ved å endre status", status: "To do"}
         ]
 
-        
+        function saveTask () {
+            // Lage const for hva brukeren skal legge inn.
+            const taskInput = document.getElementById("task").value
+                // Hvis input feltet for oppgaveteksten er tom sender siden ut en alert om at feltet et tomt
+                if(task.value === "") {
+                    alert("Oppgavetekst er tom")
+                } else {
+                    // Hvis det ikke er tomt blir oppgaveteksten pushed inn i arrayen og blir oppdatert
+                    todos.push({text: taskInput, status: "To do" })
+                }
+            status()
+        }
+
+        // Laget en funskjon slik at hvis man kan endre "To do" til "Done"
+        // taskUpdater leter etter index parameteren
+        function taskUpdater(index) {
+            if (todos[index].status == "To do") {
+                todos[index].status = "Done"
+            }
+            status()
+        }
+
+        // Laget en tom let for å kunne legge inn tekst i .map funksjonen
+        let todolist = "";
+
+        // Laget en funksjon som gjør at done blir grønn og todo blir rød
+        function status() {
+            // Skriver ut i HTML
+            document.getElementById("todolist").innerHTML = ""
+            // Laget en .map for å kunne indexere statusen i todos
+            todos.map((todo, index) => {
+                let className
+                // Bruker boolean for å gjøre slik at Done er markert grønn og "to do" er markert rød
+                if(todo.status == "Done") {
+                className = "task-status-done";
+            } else {
+                className = "task-status-todo";
+            }
+            // Sier hva teksten skal skrive ut.
+                document.getElementById("todolist").innerHTML += `<li>
+                ${todo.text} <span class="task-status ${className}" onClick="taskUpdater(${index})">${todo.status}</span></li>`
+                })
+        }
+        status()
+    
         //CLOCK
-        
+        // For klokke har jeg brukt https://www.w3schools.com/js/tryit.asp?filename=tryjs_timing_clock
+        // Har kun endret Id-en til getElementById på linje 114#
+        function startTime() {
+            // Det blir laget en const i funksjonen
+            const today = new Date();
+            let h = today.getHours();
+            let m = today.getMinutes();
+            let s = today.getSeconds();
+            m = checkTime(m);
+            s = checkTime(s);
+            document.getElementById('clock').innerHTML =  h + ":" + m + ":" + s;
+            setTimeout(startTime, 1000);
+            }
+
+            function checkTime(i) {
+            if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+            return i;
+        }
     </script>
 </body>
 </html>
