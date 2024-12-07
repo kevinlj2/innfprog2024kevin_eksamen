@@ -93,11 +93,13 @@
         let bookline = ""
         books.map((book, index) => {
             bookline += 
+            // Jeg bruker template literate for å kunne lage HTML kode i JavaScript
             `<div class="bookline">
                 <span class="booktext">${book.text}</span>
                 <span class="bookdate">${book.date}</span>
                 <span class="bookamount">${book.amount} kr</span>
             </div>`})
+            // Jeg bruker "document.getElementById(#).innerHTML for sende bookline inn i HTML"
         document.getElementById("booklines").innerHTML = bookline
 
         let equity = 23782; //Penger på konto ved inngangen til november
@@ -130,7 +132,7 @@
                 if(task.value === "") {
                     alert("Oppgavetekst er tom")
                 } else {
-                    // Hvis det ikke er tomt blir oppgaveteksten pushed inn i arrayen og blir oppdatert
+                    // Hvis det ikke er tomt blir oppgaveteksten pushed inn i arrayen todos og blir oppdatert ved at status blir kjørt på nytt
                     todos.push({text: taskInput, status: "To do" })
                 }
             status()
@@ -142,6 +144,8 @@
             if (todos[index].status == "To do") {
                 todos[index].status = "Done"
             }
+            // Når man trykker på den røde "To do" i oppgavefeltet blir funksjonen taskUpdater kjørt 
+            // som da også kjører status() for å oppdatere oppgavelisten så fort som mulig
             status()
         }
 
