@@ -11,9 +11,9 @@
         <h1>Fargepaletten</h1>
         <canvas id="colorspace"></canvas>
         <nav>
-            <button id="addColor">Legg till en farge</button>
-            <button id="emptyArray">Tilbakestill fargene</button>
-            <button id="generateAll">Generer 10 nye farger</button>
+            <button id="addColor" onclick="createColor()"">Legg till en farge</button>
+            <button id="emptyArray" onclick="clearColor()">Tilbakestill fargene</button>
+            <button id="generateAll" onclick="tenColorGenerator()">Generer 10 nye farger</button>
         </nav>
         <h2>Endre farger:</h2>
         <section>
@@ -28,7 +28,7 @@
                 <option value="7">8</option>
                 <option value="8">9</option>
                 <option value="9">10</option>
-            </select> med #<input type="text" id="newColor" /> <button id="saveNewColor">Lagre ny farge</button></p>
+            </select> med #<input type="text" id="newColor" /> <button id="saveNewColor" onclick="saveColor()">Lagre ny farge</button></p>
         </section>
     </main>
     
@@ -41,8 +41,176 @@
         const ctx = canvas.getContext("2d")
 
         /* --- YOUR FUNCTIONALITY AND CODE GOES HERE --- */
-        
 
+        // Standard verdier for posisjon
+        let positionIndex = 1;
+        let position = 0;
+
+        // Array for posisjonene til boxene
+        let hexBoxes = [];
+
+        let inputValue = document.getElementById("colorSquareIndex");
+        let userColor = document.getElementById("newColor");
+
+        // Kilde: https://www.30secondsofcode.org/js/s/random-hex-color-code/
+        // Lager en variabel som kjører en funksjon som lager en tilfeldig hexfarge
+        const randomHexColor = () => {
+            // Bruken av "(Math.random)" utgir et tilfeldig nummer.
+            // Vi kan gange det vi får fra math.random med 0xfffff og 1000000 får å få et større utvalg av tilfeldige tall
+            // Vi skriver da også at det skal bli en string på 16 siffer.
+            let n = (Math.random() * 0xfffff * 1000000).toString(16);
+            // Siden hexfargen kan kun være 6 siffer så kan vi bruke .slice får å si hvor mange av sifferene vi vil ha
+            // Vi skriver 0, 6 fordi hvis det var 1, 6 ville vi kun fått 5 siffer.
+            // Vi da returnerer med # + de tilfeldige tallene
+            return "#" + n.slice(0, 6);
+        };
+
+        // Deklarerer en funskjon for å lage en farge
+        function createColor() {
+            // Lager en variabel for å kunne hente ut den tilfeldige hexkoden
+            let randomColor = randomHexColor();
+            // Lager parameterne til arrayen
+            let x = position;
+            let hexColor = randomColor;
+            let hexCodeArray = { x: x, color: hexColor };
+            hexBoxes.push(hexCodeArray)
+
+            // Begynner pathen for å kunne fylle ut canvas
+            ctx.beginPath();
+
+            // Her bruker jeg funksjonen som skaper en tilfeldig farge
+            ctx.fillStyle = randomColor;
+            // Bruker .rect for formelen til rektangelen
+            ctx.fillRect(position, 0, 100, 100);
+
+
+            // Fyller inn bakgrunnen hvit
+            ctx.fillStyle = "white";
+            // Bestemmer hvor fargekoden blir skrevet ut
+            ctx.fillRect(position, 0, 65, 20);
+
+            // Tegner hvor # til fargepalletten er
+            ctx.fillRect(position+80, 85, 20, 20);
+
+
+            // Bestemmer hvilken font og hvilken størrelse teksten er
+            ctx.font = "12px Arial";
+            // Bestemmer hvilken farge som fargekoden er skrevet i
+            ctx.fillStyle = "#857d7d";
+            // Bruker randomColor får å vise hvilken farge det er, og bruker "+" for å gi den riktig posisjon.
+            ctx.fillText(randomColor, position+11, 15)
+
+
+            // Fyller inn indexen til å være samme farge som palletten
+            ctx.fillStyle = randomColor;
+            // Bruker variabelen index for å kunne "+" for hver fargepallett. Plusser for å få riktig posisjon på indexen
+            ctx.fillText(positionIndex, position+85 , 97);
+            
+            // Lukke pathen til canvaset
+            ctx.closePath();
+
+            // Konsoll logger hexkodene
+            console.log(randomColor)
+            
+            // Når knappen når 10 farger blir den disabled
+            if (positionIndex == 10) {
+                document.getElementById("addColor").disabled = true
+            }
+            
+            // Legger til verdier for å flytte fargene
+            positionIndex += 1;
+            position += 100;
+        }
+
+        // Definerer en funskjon som genererer 10 tilfeldige farger
+        function tenColorGenerator() {
+            clearColor()
+            // Lager en for loop som teller opp til 10 ganger der den kjører createColor() 10 ganger.
+            for(let teller = 1; teller <= 10; teller++) {
+            // Kaller på createColor for å lage farge
+            createColor()
+            }
+        }
+
+        // Deklarer en funskjon som lagrer farger av bruker
+        function saveColor() {
+
+            // Kilde for validering av hexkode: https://www.sitepoint.com/community/t/how-to-check-if-string-is-hexadecimal/162739
+            // Validerer om hexkoden fungerer
+            let hexValid = /^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$/
+
+            // Sier at hvis det ikke finnes en farge firkant på denne plassen
+            if (hexBoxes.length == 0) {
+            alert("Det er ingen firkanter som kan bytte farge enda.")
+
+            // Tester om value fra option er større enn arrayen
+            // Gir ut en alert om at firkanten ikke har en farge
+            } else if (hexBoxes.length <= inputValue.value) {
+                alert(`Du har valgt firkant ${Number(inputValue.value) + 1}. Denne har ikke en farge enda, og kan derfor ikke byttes. Du kan endre farge på firkant 1 og ${hexBoxes.length}`)
+                
+            // Sier at hvis input feltet et tomt så sender den ut en alert
+            } else if(userColor.value == "") {
+            alert("Du har ikke skrevet noen fargekode enda.")
+            
+            // Bruker "!" for å revesere logikken for at alerten skal komme når koden ikke er gyldig
+            // Tester at hvis userColor.value tilsvarer parameterne til hexValid
+            } else if (!(hexValid.test("#" +userColor.value))) {  
+                // Hvis hexkoden ikke er ekte sender den tilbake en alert som sier ifra om at den ikke er gyldig.
+                alert(`Du har skrevet ${userColor.value}. Dette er ikke en gyldig fargekode.`)
+
+            } else {
+            // Hvis alle testene er godkjent kjører funksjonen seg
+            hexBoxes[inputValue.value].color = userColor.value;
+            // Åpner pathen for å kunne oppdatere canvas
+            ctx.beginPath();
+            // Legger til # for å kunne konvertere hexkoden fra bruker
+            ctx.fillStyle = "#"+ hexBoxes[inputValue.value].color;
+            // Fyller inn fargen med inputtet fra bruker
+            ctx.fillRect(hexBoxes[inputValue.value].x, 0, 100, 100);
+
+            // Fyller inn bakgrunnen hvit
+            ctx.fillStyle = "white";
+            // Bestemmer hvor fargekoden blir skrevet ut
+            ctx.fillRect(hexBoxes[inputValue.value].x, 0, 65, 20);
+
+            // Tegner hvor # til fargepalletten er
+            ctx.fillRect(hexBoxes[inputValue.value].x+80, 85, 20, 20);
+
+            // Bestemmer hvilken font og hvilken størrelse teksten er
+            ctx.font = "12px Arial";
+            // Bestemmer hvilken farge som fargekoden er skrevet i
+            ctx.fillStyle = "#857d7d";
+            // Bruker userColor.value får å vise hvilken farge det er, og bruker "+" for å gi den riktig posisjon.
+            ctx.fillText("#"+userColor.value, hexBoxes[inputValue.value].x + 11, 15);
+
+            // Fyller inn indexen til å være samme farge som palletten
+            ctx.fillStyle = userColor.value;
+            // Variabel for å kunne indexere riktig firkant
+            let a = Number(inputValue.value) +1;
+            // Bruker hexBoxes[inputValue.value].x for å plassere indexen riktig.
+            ctx.fillText(a, hexBoxes[inputValue.value].x+85 , 97);
+            // Lukker pathen for funksjonen
+            ctx.closePath();
+            }
+        }
+            
+        // Deklarer en funksjon som tømmer canvas
+        function clearColor() {
+            // Rengjører canvas
+            ctx.clearRect(0, 0, 1000, 100)
+
+            // Resetter verdiene tilbake til standard ved trykk på "reset"
+            position = 0;
+            positionIndex = 1;
+            hexBoxes = [];
+
+            // Hvis indexen tilsvarer 1 blir knappen slått på igjen
+            if (positionIndex == 1) {
+                document.getElementById("addColor").disabled = false;
+            }        
+        }
+
+       
         //requestAnimationFrame
         const requestAnimationFrame = window.requestAnimationFrame || window.msRequestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame
         function renderCanvas() {
